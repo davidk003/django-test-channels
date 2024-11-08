@@ -10,4 +10,8 @@ to activate venv
 
 `source .venv/bin/activate` on mac/linux
 
+To start:
 
+`cd testProject`
+
+`python manage.py runserver`
