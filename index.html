@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat</title>
+    <style>
+        .message-container {
+            max-height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .message-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            list-style-type: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>WebSocket Chat</h1>
+    <div>
+        <input type="text" id="messageInput" placeholder="Add a message here" style="padding: 5px;">
+        <button onclick="sendSocketMessage()">Send</button>
+        <button onclick="disconnectWebSocket()">Disconnect</button>
+        <button onclick="startJob()">Start Job</button>
+    </div>
+
+    <h2>WebSocket Messages</h2>
+    <div class="message-container" id="messageContainer">
+        <ul id="messageList"></ul>
+    </div>
+
+    <script>
+        let ws;
+        const messages = [];
+
+        function connectWebSocket() {
+            ws = new WebSocket('ws://127.0.0.1:8000/ws/progress/');
+
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ msg: "Connected" }));
+                console.log("Connected to WebSocket");
+            };
+
+            ws.onmessage = (event) => {
+                messages.push("Received: " + event.data);
+                updateMessages();
+            };
+
+            ws.onclose = (event) => {
+                messages.push(`Disconnected. ${event.reason}`);
+                updateMessages();
+                console.log('Connection closed.', event.reason);
+            };
+
+            ws.onerror = (event) => {
+                messages.push(`Error. ${event}`);
+                updateMessages();
+                console.log('Error:', event);
+            };
+        }
+
+        function sendSocketMessage() {
+            const text = document.getElementById("messageInput").value;
+            console.log(`Sending: ${text}`);
+            ws?.send(JSON.stringify({ msg: text }));
+        }
+
+        function startJob() {
+            ws?.send(JSON.stringify({ msg: "start job" }));
+        }
+
+        function disconnectWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close();
+            }
+        }
+
+        function updateMessages() {
+            const messageList = document.getElementById("messageList");
+            messageList.innerHTML = '';
+            messages.forEach((msg, index) => {
+                const listItem = document.createElement("li");
+                listItem.className = "message-item";
+                listItem.textContent = msg;
+                messageList.appendChild(listItem);
+            });
+        }
+
+        window.onload = connectWebSocket;
+    </script>
+
+</body>
+</html>
